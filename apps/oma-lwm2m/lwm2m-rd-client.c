@@ -109,7 +109,7 @@ static struct request_state rd_request_state;
 #define DEREGISTER        10
 #define DEREGISTER_SENT   11
 #define DEREGISTERED      12
-
+#define DISCONNECTED      13
 
 #define FLAG_RD_DATA_DIRTY 1
 #define FLAG_RD_DATA_UPDATE_ON_DIRTY 0x10
@@ -429,9 +429,10 @@ deregister_callback(struct request_state *state)
     }
   } else {
     /* failed? try again? */
-    PRINTF("Deregistration failed - retry if under deregistering\n");
+    PRINTF("Deregistration failed\n");
     if(rd_state == DEREGISTER_SENT) {
-      rd_state = DEREGISTER;
+      rd_state = DISCONNECTED;
+      perform_session_callback(LWM2M_RD_CLIENT_DEREGISTER_TIMEOUT);
     }
   }
 }
@@ -621,6 +622,8 @@ periodic_process(ntimer_t *timer)
   case DEREGISTER_SENT:
     break;
   case DEREGISTERED:
+    break;
+  case DISCONNECTED:
     break;
 
   default:
